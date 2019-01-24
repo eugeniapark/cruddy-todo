@@ -54,9 +54,10 @@ exports.readOne = (id, callback) => {
             if (err) console.log(err);
             callback(null, { id, text: data });
           })
-        } else {
-          console.log('id not found')
         }
+        // else {
+        //   console.log('id not found')
+        // }
 
       })
 
@@ -74,28 +75,77 @@ exports.update = (id, text, callback) => {
   //   callback(null, { id, text });
   // }
   var path = exports.dataDir;
-  exports.readOne(id, function (err, todo) {
+
+  exports.readAll((err, todos) => {
     if (err) {
-      callback(new Error(`No item with id: ${id}`))     
+      console.log(err)
+    } else if (todos.length === 0) {
+      callback(new Error(`No item with id: ${id}`));
+    } else {
+      todos.forEach(todo => {
+        if (todo.id === id) {
+          fs.writeFile(`${path}/${id}.txt`, text, (err) => {
+            if (err) throw err;
+            callback(null, { id, text });
+          });
+        } else {
+          callback(new Error(`No item with id: ${id}`));
+        }
+   
+
+      })
+
     }
-    
-      fs.writeFile(`${path}/${id}.txt`, text, (err) => {
-        if (err) throw err;
-        callback(null, { id, text });
-      });
-    
-  })
+  });
+  // exports.readOne(id, function (err, todo) {
+  //   if (err) {
+  //     callback(new Error(`No item with id: ${id}`))
+  //   }
+
+  //   fs.writeFile(`${path}/${id}.txt`, text, (err) => {
+  //     if (err) throw err;
+  //     callback(null, { id, text });
+  //   });
+
+  // })
 };
 
 exports.delete = (id, callback) => {
-  var item = items[id];
-  delete items[id];
-  if (!item) {
-    // report an error if item not found
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback();
-  }
+  // var item = items[id];
+  // delete items[id];
+  // if (!item) {
+  //   // report an error if item not found
+  //   callback(new Error(`No item with id: ${id}`));
+  // } else {
+  //   callback();
+  // }
+  var path = exports.dataDir;
+
+  exports.readAll((err, todos) => {
+    if (err) {
+      console.log(err)
+    } else if (todos.length === 0) {
+      callback(new Error(`No item with id: ${id}`));
+    } else {
+      todos.forEach(todo => {
+        if (todo.id === id) {
+          fs.unlink(`${path}/${id}.txt`, function (error) {
+            // console.log(!`${path}/${id}.txt`)
+            if (error) {
+              callback(new Error(`No item with id: ${id}`));
+            } 
+            callback();
+          });
+        } else {
+          callback(new Error(`No item with id: ${id}`));
+        }
+   
+
+      })
+
+    }
+  });
+  
 };
 
 // Config+Initialization code -- DO NOT MODIFY /////////////////////////////////
