@@ -8,35 +8,83 @@ var items = {};
 // Public API - Fix these CRUD functions ///////////////////////////////////////
 
 exports.create = (text, callback) => {
-  var id = counter.getNextUniqueId();
-  items[id] = text;
-  callback(null, { id, text });
+  counter.getNextUniqueId(function (err, string) {
+    if (err) {
+      console.log(err)
+    } else {
+      var id = string;
+      items[id] = text;
+      var filepath = path.join(exports.dataDir, `${id}.txt`)
+      var writeStream = fs.writeFile(filepath, text, (err) => {
+        if (err) throw err;
+        callback(null, { id, text });
+      });
+    }
+  });
+
 };
 
 exports.readAll = (callback) => {
-  var data = _.map(items, (text, id) => {
-    return { id, text };
+
+  var data = [];
+  var path = exports.dataDir;
+  fs.readdir(path, function (err, items) {
+    if (err) console.log(err);
+    for (var i = 0; i < items.length; i++) {
+      var fileId = items[i].slice(0, items[i].length - 4)
+      data.push({ id: fileId, text: fileId })
+    }
+    callback(null, data);
   });
-  callback(null, data);
+
 };
 
 exports.readOne = (id, callback) => {
-  var text = items[id];
-  if (!text) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    callback(null, { id, text });
-  }
+
+  var path = exports.dataDir;
+  exports.readAll((err, todos) => {
+    if (err) {
+      console.log(err)
+    } else if (todos.length === 0) {
+      callback(new Error(`No item with id: ${id}`));
+    } else {
+      todos.forEach(todo => {
+        if (todo.id === id) {
+          fs.readFile(`${path}/${todo.id}.txt`, 'utf8', (err, data) => {
+            if (err) console.log(err);
+            callback(null, { id, text: data });
+          })
+        } else {
+          console.log('id not found')
+        }
+
+      })
+
+    }
+  });
+
 };
 
 exports.update = (id, text, callback) => {
-  var item = items[id];
-  if (!item) {
-    callback(new Error(`No item with id: ${id}`));
-  } else {
-    items[id] = text;
-    callback(null, { id, text });
-  }
+  // var item = items[id];
+  // if (!item) {
+  //   callback(new Error(`No item with id: ${id}`));
+  // } else {
+  //   items[id] = text;
+  //   callback(null, { id, text });
+  // }
+  var path = exports.dataDir;
+  exports.readOne(id, function (err, todo) {
+    if (err) {
+      callback(new Error(`No item with id: ${id}`))     
+    }
+    
+      fs.writeFile(`${path}/${id}.txt`, text, (err) => {
+        if (err) throw err;
+        callback(null, { id, text });
+      });
+    
+  })
 };
 
 exports.delete = (id, callback) => {

@@ -43,20 +43,18 @@ const writeCounter = (count, callback) => {
 // Public API - Fix this function //////////////////////////////////////////////
 
 exports.getNextUniqueId = (callback) => {  //callback
-  // counter = counter + 1;
   
   readCounter((err, data) => {  //data = count
-    console.log('readcounter', data)
+  
     if (err) {
       callback(null, 0);
     } else { //if it's not an error
       data += 1;
+
       writeCounter(data, (err, counterString) => {  //(count, callback)
-        // console.log('writecounter', data)
         if(err) {
-          // console.log(err);
-          callback(null, 0);
-        } else {
+          throw ('error writing counter');
+        } else {   
           callback(null, counterString);
         }
       });
