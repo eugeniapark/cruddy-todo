@@ -29,7 +29,7 @@ exports.readAll = (callback) => {
   var data = [];
   var path = exports.dataDir;
   fs.readdir(path, function (err, items) {
-    if (err) console.log(err);
+    if (err) callback(err);
     for (var i = 0; i < items.length; i++) {
       var fileId = items[i].slice(0, items[i].length - 4)
       data.push({ id: fileId, text: fileId })
@@ -75,26 +75,33 @@ exports.update = (id, text, callback) => {
   //   callback(null, { id, text });
   // }
   var path = exports.dataDir;
+  var found = false;
 
   exports.readAll((err, todos) => {
     if (err) {
-      console.log(err)
-    } else if (todos.length === 0) {
-      callback(new Error(`No item with id: ${id}`));
+      callback(err)
     } else {
+      console.log('todos', todos);
       todos.forEach(todo => {
-        if (todo.id === id) {
-          fs.writeFile(`${path}/${id}.txt`, text, (err) => {
-            if (err) throw err;
-            callback(null, { id, text });
-          });
-        } else {
-          callback(new Error(`No item with id: ${id}`));
+        if (id === todo.id) {
+          found = true;
         }
-   
+        if (id === todo.id) {
+          fs.writeFile(`${path}/${id}.txt`, text, (err2) => {
+            if (err2) {
+              console.log(err2, 'error2')
+              callback(err2);
+            }
+            else {
+              callback(null, { id, text });
+            }
 
+          });
+        }
       })
-
+      if (!found) {
+        callback(new Error(`No item with id: ${id}`));
+      }
     }
   });
   // exports.readOne(id, function (err, todo) {
@@ -120,32 +127,67 @@ exports.delete = (id, callback) => {
   //   callback();
   // }
   var path = exports.dataDir;
+  var found = false;
 
-  exports.readAll((err, todos) => {
-    if (err) {
-      console.log(err)
-    } else if (todos.length === 0) {
-      callback(new Error(`No item with id: ${id}`));
-    } else {
-      todos.forEach(todo => {
-        if (todo.id === id) {
-          fs.unlink(`${path}/${id}.txt`, function (error) {
-            // console.log(!`${path}/${id}.txt`)
-            if (error) {
-              callback(new Error(`No item with id: ${id}`));
-            } 
-            callback();
-          });
+  //fs exists
+  fs.exists(`${path}/${id}.txt`, (exists) => {
+    if (exists) {
+      fs.unlink(`${path}/${id}.txt`, function (error) {
+        // console.log(!`${path}/${id}.txt`)
+        if (error) {
+          callback(error);
         } else {
-          callback(new Error(`No item with id: ${id}`));
+          callback();
+          console.log('you were deleted')
         }
-   
-
-      })
-
+      });
+    } else {
+      callback(new Error(`No item with id: ${id}`));
     }
-  });
-  
+  })
+  //if does exist, unlink
+  //otherwise error
+
+  // exports.readAll((err, todos) => {
+  //   if (err) {
+  //     console.log(err)
+  //   } else {
+  //     todos.forEach(todo => {
+  //       if (todo.id === id) {
+  //         found = true;
+  //       }
+  //       if (found) {
+  //         fs.unlink(`${path}/${id}.txt`, function (error) {
+  //           // console.log(!`${path}/${id}.txt`)
+  //           if (error) {
+  //             callback(error);
+  //           } else {
+  //             callback();
+  //             console.log('you were deleted')
+  //           }
+  //         });
+  //       }
+  //       // if (todo.id === id) {
+  //       //   fs.unlink(`${path}/${id}.txt`, function (error) {
+  //       //     // console.log(!`${path}/${id}.txt`)
+  //       //     if (error) {
+  //       //       callback(new Error(`No item with id: ${id}`));
+  //       //     } 
+  //       //     callback();
+  //       //   });
+  //       // } else {
+  //       //   callback(new Error(`No item with id: ${id}`));
+  //       // }
+
+
+  //     })
+  //     if (!found) {
+  //       console.log('we were not found')
+  //       callback(new Error(`No item with id: ${id}`));
+  //     }
+  //   }
+  // });
+
 };
 
 // Config+Initialization code -- DO NOT MODIFY /////////////////////////////////

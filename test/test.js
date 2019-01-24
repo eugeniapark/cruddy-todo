@@ -178,8 +178,11 @@ describe('todos', () => {
 
     it('should not create a new todo for non-existant id', (done) => {
       const initalTodoCount = fs.readdirSync(todos.dataDir).length;
+      console.log(initalTodoCount, 'initial')
       todos.update('00017', 'bad id', (err, todo) => {
+        console.log('in function!')
         const currentTodoCount = fs.readdirSync(todos.dataDir).length;
+        console.log(currentTodoCount, 'current')
         expect(currentTodoCount).to.equal(initalTodoCount);
         expect(err).to.exist;
         done();
